@@ -1,0 +1,93 @@
+API_movies
+
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.json());
+
+// Database connection
+mongoose.connect('mongodb://localhost:27017/moviesDB', { useNewUrlParser: true, useUnifiedTopology: true });
+
+// Schema definitions
+const genreSchema = new mongoose.Schema({
+    name: String
+});
+
+const directorSchema = new mongoose.Schema({
+    name: String
+});
+
+const producerSchema = new mongoose.Schema({
+    name: String
+});
+
+const mediaSchema = new mongoose.Schema({
+    title: String,
+    genre: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre' },
+    director: { type: mongoose.Schema.Types.ObjectId, ref: 'Director' },
+    producer: { type: mongoose.Schema.Types.ObjectId, ref: 'Producer' },
+    type: String // Movie or Series
+});
+
+// Model definitions
+const Genre = mongoose.model('Genre', genreSchema);
+const Director = mongoose.model('Director', directorSchema);
+const Producer = mongoose.model('Producer', producerSchema);
+const Media = mongoose.model('Media', mediaSchema);
+
+// API routes
+// Genre routes
+app.post('/genres', async (req, res) => {
+    const genre = new Genre(req.body);
+    await genre.save();
+    res.status(201).send(genre);
+});
+
+app.get('/genres', async (req, res) => {
+    const genres = await Genre.find();
+    res.send(genres);
+});
+
+// Director routes
+app.post('/directors', async (req, res) => {
+    const director = new Director(req.body);
+    await director.save();
+    res.status(201).send(director);
+});
+
+app.get('/directors', async (req, res) => {
+    const directors = await Director.find();
+    res.send(directors);
+});
+
+// Producer routes
+app.post('/producers', async (req, res) => {
+    const producer = new Producer(req.body);
+    await producer.save();
+    res.status(201).send(producer);
+});
+
+app.get('/producers', async (req, res) => {
+    const producers = await Producer.find();
+    res.send(producers);
+});
+
+// Media routes
+app.post('/media', async (req, res) => {
+    const media = new Media(req.body);
+    await media.save();
+    res.status(201).send(media);
+});
+
+app.get('/media', async (req, res) => {
+    const mediaList = await Media.find().populate('genre director producer');
+    res.send(mediaList);
+});
+
+// Server setup
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
